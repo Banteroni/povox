@@ -1,5 +1,6 @@
 import { createStore, Store } from "@tauri-apps/plugin-store";
 import { UserData } from "../types/BackendManager.Types";
+import Fetcher from "./Fetcher";
 
 
 export default class BackendManager {
@@ -29,8 +30,18 @@ export default class BackendManager {
         if (userData === undefined) {
             throw new Error('User data not found');
         }
-        console.log(userData);
         return userData as UserData | null;
+    }
+
+    public async CreateFetcher(): Promise<Fetcher> {
+        if (!this.isReady) {
+            throw new Error('Store not ready');
+        }
+        const userData = await this.GetUserData();
+        if (!userData) {
+            throw new Error('User data not found');
+        }
+        return new Fetcher(userData.url, userData.username, userData.token, userData.salt);
     }
 
     private async UpsertStorage(): Promise<Store> {

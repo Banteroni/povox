@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BsPauseFill, BsPeopleFill, BsPlayFill, BsSkipEndFill, BsSkipStartFill, BsVolumeDownFill } from "react-icons/bs";
 import { FaGear, FaHouse, FaRecordVinyl } from "react-icons/fa6";
 import { Outlet, useNavigate } from "react-router-dom";
@@ -38,6 +38,8 @@ export default function Layout() {
 
     const [isPlaying, setIsPlaying] = useState(false);
     const [volume, setVolume] = useState(50);
+    const musicBar = useRef<HTMLDivElement | null>(null);
+    const contentContainer = useRef<HTMLDivElement | null>(null);
     const navigate = useNavigate();
 
     const invertPlaying = () => {
@@ -54,7 +56,6 @@ export default function Layout() {
             await bem.Initialize();
             const userData = await bem.GetUserData();
             if (!userData) {
-
                 navigate("/landing")
             }
 
@@ -63,21 +64,21 @@ export default function Layout() {
     }, [navigate])
 
     return (
-        <main className="h-screen min-w-full prose flex flex-col overflow-hidden">
+        <main className="h-screen min-w-full prose flex flex-col overflow-hidden justify-between">
             <div className="flex h-full">
-                <nav className=" bg-gradient-to-t from-black/40 to-base-300 flex flex-col gap-y-5 p-8 min-w-72">
-                    <h3>Welcome</h3>
+                <nav className=" bg-gradient-to-t from-black/40 to-base-300 flex flex-col gap-y-5 p-8 md:min-w-72">
+                    <h3 className="hidden md:block">Welcome</h3>
                     {routes.map((route) => (
                         <Anchor key={route.href} href={route.href} text={route.text} icon={route.icon} />
                     ))}
-                    <h3>Recommended</h3>
+                    <h3 className="hidden md:block">Recommended</h3>
 
                 </nav>
-                <div className="w-full">
+                <div className="w-full mx-auto pt-12  p-2 xxl:p-0 overflow-y-scroll" ref={contentContainer}>
                     <Outlet />
                 </div>
             </div>
-            <div className="w-full bg-base-300 grid grid-cols-3 p-5">
+            <div className="w-full bottom-0 bg-base-300 grid grid-cols-3 p-5 flex-1" ref={musicBar}>
                 <div className="flex">
                     <div className="h-14 w-14 bg-white rounded" />
                     <div className="flex flex-col justify-center pl-3">
@@ -109,5 +110,5 @@ export default function Layout() {
 
 function Anchor(props: AnchorProps) {
     return (
-        <a className="no-underline font-normal flex justify-start items-center gap-x-3 text-neutral-content" href={props.href}><span className="text-primary">{props.icon && props.icon}</span> {props.text}</a>)
+        <a className="no-underline font-normal flex justify-start items-center gap-x-3 text-neutral-content" href={props.href}><span className="text-primary text-2xl lg:text-base">{props.icon && props.icon}</span> <span className="hidden md:block duration-300">{props.text}</span></a>)
 }
