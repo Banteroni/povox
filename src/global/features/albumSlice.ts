@@ -5,6 +5,7 @@ import type { RootState } from "../store"
 export interface AlbumState {
     id: null | string
     image: null | string
+    artist: null | string
     title: null | string
     tracks: {
         id: string,
@@ -18,6 +19,7 @@ export interface AlbumState {
 const initialState: AlbumState = {
     id: null,
     image: null,
+    artist: null,
     title: null,
     tracks: []
 }
@@ -30,6 +32,7 @@ export const albumSlice = createSlice({
         setAlbum(state, action: PayloadAction<AlbumState>) {
             state.image = action.payload.image
             state.title = action.payload.title
+            state.artist = action.payload.artist
             state.tracks = action.payload.tracks
         },
         setTracks(state, action: PayloadAction<AlbumState["tracks"]>) {
@@ -38,6 +41,7 @@ export const albumSlice = createSlice({
         cleanSet(state) {
             state.image = null
             state.title = null
+            state.artist = null
             state.tracks = []
         }
     }

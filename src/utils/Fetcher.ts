@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import Album from '../models/Album';
 import { invoke } from '@tauri-apps/api/core';
-import { SubsonicResponse } from '../types/Fetcher.Types';
+import type { GetAlbumsPayload, SubsonicResponse } from '../types/Fetcher';
 import Track from '../models/Track';
 import { ReadableStreamDefaultReader } from 'stream/web';
 
@@ -40,10 +40,19 @@ export default class Fetcher {
         return response.data["subsonic-response"].status === 'ok';
     }
 
-    public async getAlbums(): Promise<Album[]> {
-        const response = await this.GenericRequest('/getAlbumList', {
-            "type": "random",
-        });
+    public async getAlbums(payload: GetAlbumsPayload): Promise<Album[]> {
+        var finalPayload: { [key: string]: string } = {};
+        if (payload.size) {
+            finalPayload["size"] = payload.size.toString();
+        }
+        if (payload.offset) {
+            finalPayload["offset"] = payload.offset.toString();
+        }
+        if (payload.type) {
+            finalPayload["type"] = payload.type;
+        }
+
+        const response = await this.GenericRequest('/getAlbumList', finalPayload);
         return response.data["subsonic-response"].albumList.album.map((album: any) => new Album(album.id, album.isDir, album.title, album.album, album.artist, album.year, album.genre, album.coverArt, album.playCount, album.created));
     }
 

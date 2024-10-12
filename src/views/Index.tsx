@@ -5,6 +5,8 @@ import Album from "../models/Album";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../global/hooks";
 import { setAlbum } from "../global/features/albumSlice";
+import { GetAlbumsType } from "../types/enums.ts";
+
 
 export default function Index() {
     const [fetcher, setFetcher] = useState<Fetcher | null>(null);
@@ -16,7 +18,9 @@ export default function Index() {
         if (!fetcher) {
             return;
         }
-        const albums = await fetcher.getAlbums();
+        const albums = await fetcher.getAlbums({
+            type: GetAlbumsType.NEWEST
+        });
         for (const album of albums) {
             const coverArt = await fetcher.GetCoverArt(album.id);
             const url = URL.createObjectURL(new Blob([coverArt]));
@@ -49,6 +53,7 @@ export default function Index() {
         dispatch(setAlbum({
             id: album.id,
             title: album.album,
+            artist: album.artist,
             tracks: [],
             image: album.coverArt,
         }))

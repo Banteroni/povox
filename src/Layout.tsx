@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { BsPauseFill, BsPeopleFill, BsPlayFill, BsSkipEndFill, BsSkipStartFill, BsVolumeDownFill } from "react-icons/bs";
 import { FaGear, FaHouse, FaRecordVinyl } from "react-icons/fa6";
 import { Outlet, useNavigate } from "react-router-dom";
 import BackendManager from "./utils/BackendManager";
+import { useAppSelector } from "./global/hooks";
 
 const routes: AnchorProps[] = [
     {
@@ -35,21 +36,28 @@ type AnchorProps = {
 
 
 export default function Layout() {
-
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [volume, setVolume] = useState(50);
-    const musicBar = useRef<HTMLDivElement | null>(null);
-    const contentContainer = useRef<HTMLDivElement | null>(null);
     const navigate = useNavigate();
 
+    // States
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [volume, setVolume] = useState(50);
+    const globalState = useAppSelector(x => x.style);
+
+    // Refs
+    const musicBar = useRef<HTMLDivElement | null>(null);
+    const contentContainer = useRef<HTMLDivElement | null>(null);
+
+    // Functions
     const invertPlaying = () => {
         setIsPlaying(!isPlaying);
     }
 
-    const changeVolume = (number: number) => {
-        setVolume(number);
+    const changeVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setVolume(parseInt(e.target.value));
     }
 
+
+    // Effects
     useEffect(() => {
         async function initialize() {
             const bem = new BackendManager();
@@ -63,6 +71,7 @@ export default function Layout() {
         initialize();
     }, [navigate])
 
+
     return (
         <main className="h-screen min-w-full prose flex flex-col overflow-hidden justify-between">
             <div className="flex h-full">
@@ -74,8 +83,14 @@ export default function Layout() {
                     <h3 className="hidden md:block">Recommended</h3>
 
                 </nav>
-                <div className="w-full mx-auto pt-12  p-2 xxl:p-0 overflow-y-scroll" ref={contentContainer}>
-                    <Outlet />
+
+                <div className={`w-full p-2 xxl:p-0  duration-300`} style={{
+                    background: `linear-gradient(to top, ${globalState.backgroundGradient}, rgba(255, 87, 51, 0))`
+                }} ref={contentContainer}>
+
+                    <div className="container mx-auto h-full pt-12">
+                        <Outlet />
+                    </div>
                 </div>
             </div>
             <div className="w-full bottom-0 bg-base-300 grid grid-cols-3 p-5 flex-1" ref={musicBar}>
@@ -97,11 +112,10 @@ export default function Layout() {
                         <div className="bg-white h-1 w-1/3 rounded-full" />
                     </div>
                 </div>
-                <div className="flex items-center justify-end gap-x-2">
+                <div className="flex items-center justify-end gap-x-2 ">
                     <BsVolumeDownFill className={`text-2xl text-white`} />
-                    <div className={`bg-neutral h-1 duration-300 rounded-full w-[25%] max-w-[120px]`} >
-                        <div className="bg-white h-1 w-1/3 rounded-full" />
-                    </div>
+
+                    <input type="range" min={0} max="100" value={volume} onChange={changeVolume} className="range range-xs w-32" />
                 </div>
             </div>
         </main>

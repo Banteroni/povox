@@ -34,12 +34,12 @@ export default function Landing() {
                         await backendManager.Initialize();
                         var salt = Fetcher.generateSalt();
                         var token = await Fetcher.generateToken(values.password, salt);
-                        
+
                         // await backendManager.SetUserData({ username: values.username, token: token, url: values.url, salt: salt});
                         var fetcher = new Fetcher(urlFormatted, values.username, token, salt);
                         try {
                             await fetcher.Ping();
-                            backendManager.SetUserData({ username: values.username, token: token, url: urlFormatted, salt: salt});
+                            backendManager.SetUserData({ username: values.username, token: token, url: urlFormatted, salt: salt });
                             navigate("/");
 
                         }

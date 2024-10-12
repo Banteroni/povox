@@ -1,4 +1,4 @@
-import Fetcher from "./Fetcher";
+import Fetcher from "../utils/Fetcher";
 import Track from "./Track";
 
 export default class Album {

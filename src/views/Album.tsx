@@ -1,18 +1,32 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import Fetcher from "../utils/Fetcher";
 import BackendManager from "../utils/BackendManager";
 import Track from "../models/Track";
 import { useAppDispatch, useAppSelector } from "../global/hooks";
 import Front from "../utils/Front";
+import { setBackgroundGradient } from "../global/features/styleSlice";
+import TrackComponent from "../components/TrackComponent";
+
+
+
+
 
 export default function Album() {
     let params = useParams();
+
+    // State
     const [fetcher, setFetcher] = useState<Fetcher | null>(null);
     const [tracks, setTracks] = useState<Track[]>([]);
-    const [gradientColor, setGradientColor] = useState<string>("");
-    const album = useAppSelector(x => x.album);
 
+    // Refs
+    const albumCoverRef = useRef<HTMLImageElement | null>(null);
+
+    // State management
+    const album = useAppSelector(x => x.album);
+    const dispatch = useAppDispatch();
+
+    // UseEffects
     useEffect(() => {
         async function init() {
             const backendManager = new BackendManager();
@@ -41,18 +55,34 @@ export default function Album() {
             image.src = album.image;
             var color = Front.getAverageRGB(image);
             var hex = "#" + ((1 << 24) + (color.r << 16) + (color.g << 8) + color.b).toString(16).slice(1);
-            setGradientColor(hex);
-
+            dispatch(setBackgroundGradient(hex));
         }
     }, [album])
 
 
 
     return (
-        <div style={{ backgroundColor: gradientColor }}>
-            <h1>Album</h1>
-            {album.image && <img src={album.image} alt="Album cover" />}
-            <p>{params.id}</p>
-        </div>
+
+        <main className="flex h-full items-center">
+            <div className="grid grid-cols-2 gap-x-4" style={{ height: albumCoverRef.current?.height }}>
+                <div className="h-fit">
+                    {album.image && (
+                        <img src={album.image} ref={albumCoverRef} alt="Album cover" className="rounded-2xl w-full m-0" />
+                    )}
+                </div>
+                <div style={{ height: "inherit" }} className="flex flex-col justify-between">
+                    <div>
+                        <h1 className="m-0">{album.title}</h1>
+                        <h2 className="mt-3 font-normal">{album.artist}</h2>
+                    </div>
+                    <div className="overflow-y-scroll">
+                        {tracks.map((track, i) => (
+                            <TrackComponent isPlaying={false} key={track.id} track={track} order={i} onClick={() => { }} />
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </main>
+
     )
 }

@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { albumSlice } from './features/albumSlice'
+import { styleSlice } from './features/styleSlice'
 
 export const store = configureStore({
     reducer: {
         album: albumSlice.reducer,
+        style: styleSlice.reducer
     },
 })
 

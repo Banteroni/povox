@@ -1,5 +1,5 @@
 import { createStore, Store } from "@tauri-apps/plugin-store";
-import { UserData } from "../types/BackendManager.Types";
+import type { UserData } from "../types/BackendManager";
 import Fetcher from "./Fetcher";
 
 
