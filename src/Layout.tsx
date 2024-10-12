@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { BsPauseFill, BsPeopleFill, BsPlayFill, BsSkipEndFill, BsSkipStartFill, BsVolumeDownFill } from "react-icons/bs";
 import { FaGear, FaHouse, FaRecordVinyl } from "react-icons/fa6";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
 import BackendManager from "./utils/BackendManager";
 import { useAppSelector } from "./global/hooks";
+import Fetcher from "./utils/Fetcher";
 
 const routes: AnchorProps[] = [
     {
@@ -42,10 +43,15 @@ export default function Layout() {
     const [isPlaying, setIsPlaying] = useState(false);
     const [volume, setVolume] = useState(50);
     const globalState = useAppSelector(x => x.style);
+    const musicBarState = useAppSelector(x => x.musicBar);
+    const [fetcher, setFetcher] = useState<Fetcher | null>(null);
+    const [progression, setProgression] = useState(0);
+    const [currentTime, setCurrentTime] = useState(0);
 
     // Refs
     const musicBar = useRef<HTMLDivElement | null>(null);
     const contentContainer = useRef<HTMLDivElement | null>(null);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
 
     // Functions
     const invertPlaying = () => {
@@ -66,10 +72,103 @@ export default function Layout() {
             if (!userData) {
                 navigate("/landing")
             }
+            const fetcher = await bem.CreateFetcher();
+            setFetcher(fetcher);
 
         }
         initialize();
     }, [navigate])
+
+    useEffect(() => {
+        if (audioRef.current) {
+            audioRef.current.volume = volume / 100;
+        }
+    }, [volume])
+
+    useEffect(() => {
+        const audioElement = audioRef.current;
+        if (audioElement) {
+            if (isPlaying) {
+                audioElement.play();
+            } else {
+                audioElement.pause();
+            }
+        }
+    }, [isPlaying])
+
+    useEffect(() => {
+        if (fetcher) {
+            loadTrack(musicBarState.trackId as string);
+        }
+    }, [musicBarState.trackId, fetcher])
+
+    useEffect(() => {
+        if (audioRef.current) {
+            audioRef.current.addEventListener("timeupdate", () => {
+                if (audioRef.current) {
+                    const duration = audioRef.current.duration;
+                    const currentTime = audioRef.current.currentTime;
+                    const progression = (currentTime / duration) * 100;
+                    setCurrentTime(currentTime);
+                    setProgression(progression);
+                }
+            });
+        }
+    }, [audioRef])
+
+    const loadTrack = async (trackId: string) => {
+        if (!fetcher) {
+            return;
+        }
+        const audioElement = audioRef.current;
+        if (!audioElement) {
+            return;
+        }
+        audioElement.pause(); // Stop the audio
+        audioElement.src = ""; // Clear the source
+
+        const reader = await fetcher.GetStream(trackId);
+        const mediaSource = new MediaSource();
+
+        audioElement.src = URL.createObjectURL(mediaSource);
+        audioElement.controls = true;
+        audioElement.play();
+
+
+        mediaSource.addEventListener('sourceopen', async () => {
+            const sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
+
+            const readNextChunk = async () => {
+                const { done, value } = await reader.read();
+                if (done) {
+                    // Signal that we're done appending
+                    mediaSource.endOfStream();
+                    return;
+                }
+
+                // Wait until the buffer is ready to accept more data
+                sourceBuffer.addEventListener('updateend', () => {
+                    readNextChunk(); // Read the next chunk
+                }, { once: true });
+
+                // Append the chunk to the source buffer
+                sourceBuffer.appendBuffer(value);
+            };
+
+            readNextChunk(); // Start reading the first chunk
+        });
+    };
+
+
+    // Get MM:SS from current time seconds and duration
+    var currentTimeStringSeconds = Math.floor(currentTime % 60).toString();
+    if (currentTimeStringSeconds.length === 1) {
+        currentTimeStringSeconds = `0${currentTimeStringSeconds}`;
+    }
+    const currentTimeStringMinutes = Math.floor(currentTime / 60);
+    const durationString = `${currentTimeStringMinutes}:${currentTimeStringSeconds}`;
+
+
 
 
     return (
@@ -94,12 +193,17 @@ export default function Layout() {
                 </div>
             </div>
             <div className="w-full bottom-0 bg-base-300 grid grid-cols-3 p-5 flex-1" ref={musicBar}>
+                <audio ref={audioRef} controls className="hidden" />
+
                 <div className="flex">
-                    <div className="h-14 w-14 bg-white rounded" />
-                    <div className="flex flex-col justify-center pl-3">
-                        <label className="text-white">Track name</label>
-                        <span className="text-sm">Artist name</span>
-                    </div>
+                    {
+                        musicBarState.trackId && (<>
+                            {musicBarState.coverArt && <img className="h-14 w-14 rounded m-0" src={musicBarState.coverArt} />}
+                            <div className="flex flex-col justify-center pl-3">
+                                <label className="text-white">{musicBarState.trackName}</label>
+                                <span className="text-sm">{musicBarState.artist}</span>
+                            </div></>)
+                    }
                 </div>
                 <div className="flex flex-col items-center gap-y-3">
                     <div className="flex gap-x-2 text-3xl">
@@ -108,13 +212,15 @@ export default function Layout() {
 
                         <button><BsSkipEndFill /></button>
                     </div>
-                    <div className="bg-neutral h-1 w-[100%] rounded-full" >
-                        <div className="bg-white h-1 w-1/3 rounded-full" />
+                    <div className="flex w-full items-center gap-x-3">
+                        {durationString}
+                        <div className="bg-neutral h-1 w-full rounded-full" >
+                            <div className="bg-white h-1 rounded-full" style={{ width: progression + "%" }} />
+                        </div>
                     </div>
                 </div>
                 <div className="flex items-center justify-end gap-x-2 ">
                     <BsVolumeDownFill className={`text-2xl text-white`} />
-
                     <input type="range" min={0} max="100" value={volume} onChange={changeVolume} className="range range-xs w-32" />
                 </div>
             </div>
@@ -124,5 +230,5 @@ export default function Layout() {
 
 function Anchor(props: AnchorProps) {
     return (
-        <a className="no-underline font-normal flex justify-start items-center gap-x-3 text-neutral-content" href={props.href}><span className="text-primary text-2xl lg:text-base">{props.icon && props.icon}</span> <span className="hidden md:block duration-300">{props.text}</span></a>)
+        <Link className="no-underline font-normal flex justify-start items-center gap-x-3 text-neutral-content" to={props.href}><span className="text-primary text-2xl lg:text-base">{props.icon && props.icon}</span> <span className="hidden md:block duration-300">{props.text}</span></Link>)
 }

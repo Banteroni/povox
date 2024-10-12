@@ -18,7 +18,7 @@ export default (props: TrackProps) => {
 
     const track = props.track
 
-    return <div className="flex bg-black/40 hover:bg-white/10 p-3 items-center gap-x-5 cursor-pointer duration-100" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+    return <div className="flex bg-black/40 hover:bg-white/10 p-3 items-center gap-x-5 cursor-pointer duration-100" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} onClick={props.onClick}>
         <span className="w-2">{isHovered ? <BsPlayFill className="text-primary" /> : props.order + 1}</span>
         <div className="flex flex-col flex-1">
             <span className={props.isPlaying ? "text-primary" : "text-white"}>{track.title}</span>

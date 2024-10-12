@@ -21,6 +21,7 @@ export default class Track {
     transcodedSuffix: string;
     type: string;
     year: number;
+    coverArt: string | undefined;
 
     constructor(album: string, albumId: string, artist: string, artistId: string, bitRate: number, contentType: string, created: string, discNumber: number, duration: number, genre: string, id: string, isDir: boolean, path: string, playCount: number, size: number, suffix: string, title: string, track: number, transcodedContentType: string, transcodedSuffix: string, type: string, year: number) {
         this.album = album;

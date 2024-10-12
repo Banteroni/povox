@@ -7,6 +7,7 @@ import { useAppDispatch, useAppSelector } from "../global/hooks";
 import Front from "../utils/Front";
 import { setBackgroundGradient } from "../global/features/styleSlice";
 import TrackComponent from "../components/TrackComponent";
+import { setMusicBarTrack } from "../global/features/musicBarSlice";
 
 
 
@@ -26,6 +27,11 @@ export default function Album() {
     const album = useAppSelector(x => x.album);
     const dispatch = useAppDispatch();
 
+    // Functions
+    const playTrack = (track: Track) => {
+        dispatch(setMusicBarTrack(track));
+    }
+
     // UseEffects
     useEffect(() => {
         async function init() {
@@ -42,6 +48,9 @@ export default function Album() {
             async function fetchData() {
                 if (fetcher) {
                     const tracks = await fetcher.GetTracksByAlbum(params.id as string);
+                    for (let i = 0; i < tracks.length; i++) {
+                        tracks[i].coverArt = album.image as string;
+                    }
                     setTracks(tracks);
                 }
             }
@@ -62,7 +71,6 @@ export default function Album() {
 
 
     return (
-
         <main className="flex h-full items-center">
             <div className="grid grid-cols-2 gap-x-4" style={{ height: albumCoverRef.current?.height }}>
                 <div className="h-fit">
@@ -70,14 +78,14 @@ export default function Album() {
                         <img src={album.image} ref={albumCoverRef} alt="Album cover" className="rounded-2xl w-full m-0" />
                     )}
                 </div>
-                <div style={{ height: "inherit" }} className="flex flex-col justify-between">
+                <div style={{ height: "inherit" }} className="flex flex-col justify-start">
                     <div>
                         <h1 className="m-0">{album.title}</h1>
                         <h2 className="mt-3 font-normal">{album.artist}</h2>
                     </div>
                     <div className="overflow-y-scroll">
                         {tracks.map((track, i) => (
-                            <TrackComponent isPlaying={false} key={track.id} track={track} order={i} onClick={() => { }} />
+                            <TrackComponent isPlaying={false} key={track.id} track={track} order={i} onClick={() => playTrack(track)} />
                         ))}
                     </div>
                 </div>
