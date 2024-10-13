@@ -5,3 +5,10 @@
 body {
     margin: 0;
 }
+
+
+@layer components {
+    .navbar-section {
+        @apply uppercase text-sm tracking-widest text-white/50 
+    }
+}

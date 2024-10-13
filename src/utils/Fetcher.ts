@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import Album from '../models/Album';
 import { invoke } from '@tauri-apps/api/core';
-import type { GetAlbumsPayload, SubsonicResponse } from '../types/Fetcher';
+import type { AlbumInfo, GetAlbumInfoResponse, GetAlbumsPayload, QueryResponse, SubsonicResponse } from '../types/Fetcher';
 import Track from '../models/Track';
 import { ReadableStreamDefaultReader } from 'stream/web';
 
@@ -10,7 +10,7 @@ export default class Fetcher {
     baseUrl: string;
     private token: string | null = null;
     private salt: string;
-    private client: string = "music-player";
+    private client: string = "povox";
     private username: string;
     private fetcher: AxiosInstance
     isReady: boolean = false;
@@ -61,6 +61,41 @@ export default class Fetcher {
             id: id
         })
         return response.data
+    }
+
+    public async GetAlbumInfo(id: string): Promise<AlbumInfo> {
+        const response = await this.GenericRequest("/getAlbumInfo", {
+            id: id
+        })
+        const album = response.data["subsonic-response"] as unknown as GetAlbumInfoResponse;
+        return {
+            notes: album.albumInfo.notes,
+            musicBrainzId: album.albumInfo.musicBrainzId,
+            lastFmUrl: album.albumInfo.lastFmUrl,
+            smallImageUrl: album.albumInfo.smallImageUrl,
+            mediumImageUrl: album.albumInfo.mediumImageUrl,
+            largeImageUrl: album.albumInfo.largeImageUrl
+        }
+
+    }
+
+    public async Query(query: string
+    ): Promise<QueryResponse["searchResult2"]> {
+        const response = await this.GenericRequest('/search2', {
+            query: query
+        });
+        var parsedResponse = response.data["subsonic-response"] as unknown as QueryResponse;
+        // There can be empty objects in the response, make sure to convert them into an empty array
+        if (!parsedResponse.searchResult2.album) {
+            parsedResponse.searchResult2.album = [];
+        }
+        if (!parsedResponse.searchResult2.artist) {
+            parsedResponse.searchResult2.artist = [];
+        }
+        if (!parsedResponse.searchResult2.song) {
+            parsedResponse.searchResult2.song = [];
+        }
+        return parsedResponse.searchResult2;
     }
 
     public async GetTracksByAlbum(id: string): Promise<Track[]> {

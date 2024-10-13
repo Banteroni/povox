@@ -4,8 +4,6 @@ import Fetcher from "../utils/Fetcher";
 import BackendManager from "../utils/BackendManager";
 import Track from "../models/Track";
 import { useAppDispatch, useAppSelector } from "../global/hooks";
-import Front from "../utils/Front";
-import { setBackgroundGradient } from "../global/features/styleSlice";
 import TrackComponent from "../components/TrackComponent";
 import { setMusicBarTrack } from "../global/features/musicBarSlice";
 
@@ -25,6 +23,7 @@ export default function Album() {
 
     // State management
     const album = useAppSelector(x => x.album);
+    const musicBar = useAppSelector(x => x.musicBar);
     const dispatch = useAppDispatch();
 
     // Functions
@@ -58,20 +57,14 @@ export default function Album() {
         }
     }, [fetcher, params.id])
 
-    useEffect(() => {
-        if (album.image !== null) {
-            var image = document.createElement('img');
-            image.src = album.image;
-            var color = Front.getAverageRGB(image);
-            var hex = "#" + ((1 << 24) + (color.r << 16) + (color.g << 8) + color.b).toString(16).slice(1);
-            dispatch(setBackgroundGradient(hex));
-        }
-    }, [album])
-
 
 
     return (
         <main className="flex h-full items-center">
+
+            <div className="absolute -z-10 left-0 right-0 bottom-0 ">
+                <img src={album.image ? album.image : ""} alt="Album cover" className={`w-full object-cover blur-3xl duration-1000 ${album.image ? "opacity-20" : "opacity-0"}`} />
+            </div>
             <div className="grid grid-cols-2 gap-x-4" style={{ height: albumCoverRef.current?.height }}>
                 <div className="h-fit">
                     {album.image && (
@@ -85,7 +78,7 @@ export default function Album() {
                     </div>
                     <div className="overflow-y-scroll">
                         {tracks.map((track, i) => (
-                            <TrackComponent isPlaying={false} key={track.id} track={track} order={i} onClick={() => playTrack(track)} />
+                            <TrackComponent isPlaying={musicBar.trackId == track.id} key={track.id} track={track} order={i} onClick={() => playTrack(track)} />
                         ))}
                     </div>
                 </div>

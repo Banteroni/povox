@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { BsPauseFill, BsPeopleFill, BsPlayFill, BsSkipEndFill, BsSkipStartFill, BsVolumeDownFill } from "react-icons/bs";
 import { FaGear, FaHouse, FaRecordVinyl } from "react-icons/fa6";
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import BackendManager from "./utils/BackendManager";
 import { useAppSelector } from "./global/hooks";
 import Fetcher from "./utils/Fetcher";
@@ -38,11 +38,11 @@ type AnchorProps = {
 
 export default function Layout() {
     const navigate = useNavigate();
+    const location = useLocation()
 
     // States
     const [isPlaying, setIsPlaying] = useState(false);
     const [volume, setVolume] = useState(50);
-    const globalState = useAppSelector(x => x.style);
     const musicBarState = useAppSelector(x => x.musicBar);
     const [fetcher, setFetcher] = useState<Fetcher | null>(null);
     const [progression, setProgression] = useState(0);
@@ -113,6 +113,12 @@ export default function Layout() {
                     setProgression(progression);
                 }
             });
+            audioRef.current.addEventListener("play", () => {
+                setIsPlaying(true);
+            })
+            audioRef.current.addEventListener("pause", () => {
+                setIsPlaying(false);
+            })
         }
     }, [audioRef])
 
@@ -166,33 +172,36 @@ export default function Layout() {
         currentTimeStringSeconds = `0${currentTimeStringSeconds}`;
     }
     const currentTimeStringMinutes = Math.floor(currentTime / 60);
-    const durationString = `${currentTimeStringMinutes}:${currentTimeStringSeconds}`;
+    const currentDurationString = `${currentTimeStringMinutes}:${currentTimeStringSeconds}`;
 
-
-
+    const duration = musicBarState.duration;
+    var durationStringSeconds = Math.floor(duration % 60).toString();
+    if (durationStringSeconds.length === 1) {
+        durationStringSeconds = `0${durationStringSeconds}`;
+    }
+    const durationStringMinutes = Math.floor(duration / 60);
+    const durationString = `${durationStringMinutes}:${durationStringSeconds}`;
 
     return (
         <main className="h-screen min-w-full prose flex flex-col overflow-hidden justify-between">
-            <div className="flex h-full">
-                <nav className=" bg-gradient-to-t from-black/40 to-base-300 flex flex-col gap-y-5 p-8 md:min-w-72">
-                    <h3 className="hidden md:block">Welcome</h3>
+            <div className="flex overflow-hidden flex-1">
+                <nav className=" border-r  border-solid border-secondary bg-base-300 flex flex-col p-8 pl-5 md:min-w-72">
+                    <h3 className="hidden md:block navbar-section px-3">Welcome</h3>
                     {routes.map((route) => (
                         <Anchor key={route.href} href={route.href} text={route.text} icon={route.icon} />
                     ))}
-                    <h3 className="hidden md:block">Recommended</h3>
+                    <h3 className="hidden md:block navbar-section px-3">Recommended</h3>
 
                 </nav>
 
-                <div className={`w-full p-2 xxl:p-0  duration-300`} style={{
-                    background: `linear-gradient(to top, ${globalState.backgroundGradient}, rgba(255, 87, 51, 0))`
-                }} ref={contentContainer}>
+                <div className={`w-full p-2 xxl:p-0  duration-300`} ref={contentContainer}>
 
                     <div className="container mx-auto h-full pt-12">
                         <Outlet />
                     </div>
                 </div>
             </div>
-            <div className="w-full bottom-0 bg-base-300 grid grid-cols-3 p-5 flex-1" ref={musicBar}>
+            <div className="w-full bottom-0 bg-base-300 grid grid-cols-3 p-3 border-t border-solid border-secondary" ref={musicBar}>
                 <audio ref={audioRef} controls className="hidden" />
 
                 <div className="flex">
@@ -205,18 +214,19 @@ export default function Layout() {
                             </div></>)
                     }
                 </div>
-                <div className="flex flex-col items-center gap-y-3">
+                <div className="flex flex-col items-center justify-between">
                     <div className="flex gap-x-2 text-3xl">
                         <button><BsSkipStartFill /></button>
                         {isPlaying ? <button className="text-white" onClick={invertPlaying}><BsPauseFill /></button> : <button onClick={invertPlaying} className="text-primary"><BsPlayFill /></button>}
 
                         <button><BsSkipEndFill /></button>
                     </div>
-                    <div className="flex w-full items-center gap-x-3">
-                        {durationString}
+                    <div className="flex w-full items-center gap-x-3 text-sm">
+                        {currentDurationString}
                         <div className="bg-neutral h-1 w-full rounded-full" >
                             <div className="bg-white h-1 rounded-full" style={{ width: progression + "%" }} />
                         </div>
+                        {durationString}
                     </div>
                 </div>
                 <div className="flex items-center justify-end gap-x-2 ">
@@ -230,5 +240,5 @@ export default function Layout() {
 
 function Anchor(props: AnchorProps) {
     return (
-        <Link className="no-underline font-normal flex justify-start items-center gap-x-3 text-neutral-content" to={props.href}><span className="text-primary text-2xl lg:text-base">{props.icon && props.icon}</span> <span className="hidden md:block duration-300">{props.text}</span></Link>)
+        <Link className="no-underline font-normal flex justify-start items-center gap-x-3 text-neutral-content hover:bg-white/10 p-3 rounded-xl duration-75" to={props.href}><span className="text-primary text-2xl lg:text-base">{props.icon && props.icon}</span> <span className="hidden md:block duration-300">{props.text}</span></Link>)
 }

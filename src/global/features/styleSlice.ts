@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit'
 import type { RootState } from "../store"
 
 // Define a type for the slice state
@@ -18,9 +18,6 @@ export const styleSlice = createSlice({
     // `createSlice` will infer the state type from the `initialState` argument
     initialState,
     reducers: {
-        setBackgroundGradient(state, action: PayloadAction<string>) {
-            state.backgroundGradient = action.payload
-        },
         toggleSearchTab(state) {
             state.searchTab = !state.searchTab
         }
@@ -28,7 +25,7 @@ export const styleSlice = createSlice({
     }
 })
 
-export const { setBackgroundGradient, toggleSearchTab } = styleSlice.actions
+export const {  toggleSearchTab } = styleSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectStyle = (state: RootState) => state.style

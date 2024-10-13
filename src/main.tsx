@@ -11,6 +11,7 @@ import Index from "./views/Index";
 import Album from "./views/Album";
 import { Provider } from "react-redux";
 import { store } from "./global/store";
+import Albums from "./views/Albums";
 
 const router = createBrowserRouter([
   {
@@ -23,11 +24,11 @@ const router = createBrowserRouter([
       },
       {
         path: "/albums",
-        element: <div>Albums</div>,
+        element: <Albums />,
       },
       {
         path: "/albums/:id",
-        element: <Album/>,
+        element: <Album />,
       }
     ]
   },
@@ -42,7 +43,7 @@ const router = createBrowserRouter([
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <Provider store={store}>
-    <RouterProvider router={router} />
+      <RouterProvider router={router} />
     </Provider>
   </React.StrictMode>
 );

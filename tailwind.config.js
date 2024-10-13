@@ -6,10 +6,13 @@ export default {
   ],
   daisyui: {
     themes: [
-      "dark"
-    ]
-  },
-  theme: {
+      {
+        light: {
+          ...require("daisyui/src/theming/themes")["black"],
+          primary: "#eb8034",
+        },
+      },
+    ],
   },
   plugins: [
     require("@tailwindcss/typography"), require('daisyui'),

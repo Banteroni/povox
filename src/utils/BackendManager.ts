@@ -46,7 +46,6 @@ export default class BackendManager {
 
     private async UpsertStorage(): Promise<Store> {
         const store = await createStore('store.bin', {
-            // we can save automatically after each store modification
             // @ts-ignore
             autoSave: 1,
         });
