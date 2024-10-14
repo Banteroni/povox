@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import { BsSearch } from "react-icons/bs";
-import Album from "../models/Album";
 import Fetcher from "../utils/Fetcher";
 import BackendManager from "../utils/BackendManager";
 import { GetEntityType } from "../types/enums";
-import AlbumComponent from "../components/AlbumComponent";
+import Artist from "../models/Artist";
 
-export default function Albums() {
+export default function Artists() {
     // States
-    const [albums, setAlbums] = useState<Album[]>([]);
+    const [artists, setArtists] = useState<Artist[]>([]);
     const [fetcher, setFetcher] = useState<Fetcher | null>(null);
     const [moreRecords, setMoreRecords] = useState<boolean>(true);
     const [search, setSearch] = useState<{
@@ -33,13 +32,13 @@ export default function Albums() {
 
     useEffect(() => {
         if (fetcher) {
-            queryAlbums();
+            queryArtists();
         }
     }, [fetcher])
 
     useEffect(() => {
         if (search.isSearching) {
-            queryAlbums();
+            queryArtists();
         }
     }, [search.isSearching])
 
@@ -50,18 +49,18 @@ export default function Albums() {
         }
     }
 
-    const queryAlbums = async () => {
+    const queryArtists = async () => {
         if (fetcher) {
-            var fetchedAlbums: Album[] = []
-            var currentAlbums = albums;
+            var fetchedArtists: Artist[] = []
+            var currentArtists = artists;
 
             if (search.value === "") {
                 let offset = 0;
-                if (currentAlbums.length > 0 && moreRecords == true) {
-                    offset = currentAlbums.length;
+                if (currentArtists.length > 0 && moreRecords == true) {
+                    offset = currentArtists.length;
                 }
-                fetchedAlbums = await fetcher.getAlbums({ size: 15, offset: offset, type: GetEntityType.FREQUENT })
-                if (fetchedAlbums.length < 15) {
+                fetchedArtists = await fetcher.getArtists({ size: 15, offset: offset, type: GetEntityType.FREQUENT })
+                if (currentArtists.length < 15) {
                     setMoreRecords(false)
                 }
                 else {
@@ -70,16 +69,17 @@ export default function Albums() {
             }
             else {
                 setMoreRecords(false)
-                currentAlbums = []
+                currentArtists = []
                 const query = await fetcher.Query(search.value)
-                fetchedAlbums = query.album
+                currentArtists = query.artist;
                 setSearch(x => ({ ...x, isSearching: false }))
             }
 
-            for (let i = 0; i < fetchedAlbums.length; i++) {
-                const coverArt = await fetchedAlbums[i].GetCoverArt(fetcher);
+            for (let i = 0; i < currentArtists.length; i++) {
+                const coverArt = await fetcher.GetCoverArt(currentArtists[i].id);
+                currentArtists[i].coverArt = URL.createObjectURL(new Blob([coverArt]))
             }
-            setAlbums([...currentAlbums, ...fetchedAlbums])
+            setArtists([...currentArtists, ...fetchedArtists])
             setSearch(x => ({ ...x, isSearching: false }))
         }
     }
@@ -89,7 +89,7 @@ export default function Albums() {
         // Check if the user has scrolled to the bottom of the page
         if (e.currentTarget.scrollHeight - e.currentTarget.scrollTop === e.currentTarget.clientHeight) {
             if (moreRecords) {
-                await queryAlbums()
+                await queryArtists()
             }
         }
     }
@@ -110,8 +110,8 @@ export default function Albums() {
                 </select>
             </div>
             <div className="grid grid-cols-5 gap-4 overflow-y-auto max-h-full pb-56" onScroll={onScroll}>
-                {albums.map(album => (
-                    <AlbumComponent key={album.id} album={album} />
+                {artists.map(artist => (
+                    <div>{artist.name}</div>
                 ))}
             </div>
         </>

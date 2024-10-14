@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Fetcher from "../utils/Fetcher";
 import BackendManager from "../utils/BackendManager";
 import Album from "../models/Album";
-import { GetAlbumsType } from "../types/enums.ts";
+import { GetEntityType } from "../types/enums.ts";
 import AlbumComponent from "../components/AlbumComponent.tsx";
 import { AlbumInfo } from "../types/Fetcher";
 import { RouteToAlbum } from "../utils/RoutingUtils.ts";
@@ -30,12 +30,12 @@ export default function Index() {
             return;
         }
         const albums = await fetcher.getAlbums({
-            type: GetAlbumsType.NEWEST,
+            type: GetEntityType.NEWEST,
             size: 6
         });
         const latestAlbum = await fetcher.getAlbums({
             size: 1,
-            type: GetAlbumsType.RANDOM
+            type: GetEntityType.RANDOM
         })
         const coverArt = await fetcher.GetCoverArt(latestAlbum[0].id);
         const url = URL.createObjectURL(new Blob([coverArt]));
@@ -79,7 +79,7 @@ export default function Index() {
                     <h3 className="navbar-section m-0 mb-4">DISCOVER</h3>
                     <h1 className="mb-2">{latestAlbum?.album?.album}</h1>
                     <span className="text-xl">{latestAlbum?.album?.artist}</span>
-                    <div dangerouslySetInnerHTML={{__html: latestAlbum.albumInfo?.notes as string}} className="text-sm mt-8"/>
+                    <div dangerouslySetInnerHTML={{ __html: latestAlbum.albumInfo?.notes as string }} className="text-sm mt-8" />
                     <div className="flex-1 flex items-end gap-x-3">
                         <button className="btn btn-primary">Play</button>
                         <a onClick={() => RouteToAlbum(latestAlbum.album as Album, navigator, dispatch)} className="btn">View album</a>

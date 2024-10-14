@@ -5,11 +5,7 @@ import BackendManager from "../utils/BackendManager";
 import Track from "../models/Track";
 import { useAppDispatch, useAppSelector } from "../global/hooks";
 import TrackComponent from "../components/TrackComponent";
-import { setMusicBarTrack } from "../global/features/musicBarSlice";
-
-
-
-
+import { setMusicBarTrack, setQueueTracks } from "../global/features/musicBarSlice";
 
 export default function Album() {
     let params = useParams();
@@ -29,6 +25,10 @@ export default function Album() {
     // Functions
     const playTrack = (track: Track) => {
         dispatch(setMusicBarTrack(track));
+        const trackIds = tracks.map(x => x.id);
+        const index = trackIds.indexOf(track.id);
+        const tracksToQueue = tracks.slice(index + 1).map(x => x.id);
+        dispatch(setQueueTracks(tracksToQueue));
     }
 
     // UseEffects

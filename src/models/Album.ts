@@ -27,7 +27,19 @@ export default class Album {
     }
 
     public async GetCoverArt(fetcher: Fetcher): Promise<BinaryData> {
-        return await fetcher.GetCoverArt(this.id);
+        if (fetcher.isReady) {
+            return await fetcher.GetCoverArt(this.id);
+        }
+        throw new Error('Fetcher not ready');
+    }
+
+    public async GetCovertArtUrl(fetcher: Fetcher): Promise<string> {
+        if (fetcher.isReady) {
+            var binary = await fetcher.GetCoverArt(this.id);
+            var url = URL.createObjectURL(new Blob([binary]));
+            return url;
+        }
+        throw new Error('Fetcher not ready');
     }
 
     public async GetTracks(fetcher: Fetcher): Promise<Track[]> {

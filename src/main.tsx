@@ -12,6 +12,7 @@ import Album from "./views/Album";
 import { Provider } from "react-redux";
 import { store } from "./global/store";
 import Albums from "./views/Albums";
+import Artists from "./views/Artists";
 
 const router = createBrowserRouter([
   {
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
       {
         path: "/albums/:id",
         element: <Album />,
+      },
+      {
+        path: "/artists",
+        element: <Artists />,
       }
     ]
   },

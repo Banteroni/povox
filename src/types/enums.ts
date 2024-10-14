@@ -1,4 +1,4 @@
-export enum GetAlbumsType {
+export enum GetEntityType {
     RANDOM = "random",
     NEWEST = "newest",
     HIGHEST = "highest",

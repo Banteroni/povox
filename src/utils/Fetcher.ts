@@ -1,9 +1,10 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import Album from '../models/Album';
 import { invoke } from '@tauri-apps/api/core';
-import type { AlbumInfo, GetAlbumInfoResponse, GetAlbumsPayload, QueryResponse, SubsonicResponse } from '../types/Fetcher';
+import type { AlbumInfo, GetAlbumInfoResponse, GetAlbumsPayload, GetArtistsPayload, GetArtistsResponse, QueryResponse, SubsonicResponse } from '../types/Fetcher';
 import Track from '../models/Track';
 import { ReadableStreamDefaultReader } from 'stream/web';
+import Artist from '../models/Artist';
 
 export default class Fetcher {
 
@@ -54,6 +55,41 @@ export default class Fetcher {
 
         const response = await this.GenericRequest('/getAlbumList', finalPayload);
         return response.data["subsonic-response"].albumList.album.map((album: any) => new Album(album.id, album.isDir, album.title, album.album, album.artist, album.year, album.genre, album.coverArt, album.playCount, album.created));
+    }
+
+    public async getArtists(payload: GetArtistsPayload): Promise<Artist[]> {
+        var finalPayload: { [key: string]: string } = {};
+        if (payload.size) {
+            finalPayload["size"] = payload.size.toString();
+        }
+        if (payload.offset) {
+            finalPayload["offset"] = payload.offset.toString();
+        }
+
+        const response = await this.GenericRequest("/getArtists", finalPayload);
+        const subsonicResponse = response.data["subsonic-response"] as unknown as GetArtistsResponse;
+        if (!subsonicResponse) {
+            return [];
+        }
+
+        var artists: Artist[] = [];
+        for (const index of subsonicResponse.artists.index) {
+            for (const artist of index.artist) {
+                artists.push(artist);
+            }
+        }
+        return artists;
+    }
+
+    public async GetTrack(id: string): Promise<Track> {
+        const response = await this.GenericRequest("/getSong", {
+            id: id
+        });
+        const song = response.data["subsonic-response"]?.song as Track;
+        if (!song) {
+            throw new Error('Song not found');
+        }
+        return song;
     }
 
     public async GetCoverArt(id: string): Promise<BinaryData> {
@@ -110,6 +146,9 @@ export default class Fetcher {
             id: id
         });
         return response;
+    }
+    public GetStreamUrl(id: string): string {
+        return `${this.baseUrl}/rest/stream?id=${id}&u=${this.username}&t=${this.token}&s=${this.salt}&c=${this.client}&v=1.16.1`;
     }
 
 

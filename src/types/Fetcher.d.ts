@@ -1,5 +1,6 @@
 import Album from "../models/Album"
-import { GetAlbumsType } from "./enums"
+import Artist from "../models/Artist"
+import { GetEntityType } from "./enums"
 
 
 export type SubsonicResponse = {
@@ -18,6 +19,13 @@ export type GetAlbumListResponse = {
 
 export type GetAlbumInfoResponse = {
     albumInfo: AlbumInfo
+}
+
+export type GetArtistsResponse = {
+    artists: {
+        ignoredArticles: string,
+        index: { name: string, artist: Artist[] }[]
+    }
 }
 
 export type AlbumInfo = {
@@ -40,8 +48,13 @@ export type QueryResponse = {
 }
 
 export type GetAlbumsPayload = {
-    type: GetAlbumsType,
+    type: GetEntityType,
     size?: number,
     offset?: number
 }
 
+export type GetArtistsPayload = {
+    type: GetEntityType,
+    size?: number,
+    offset?: number
+}

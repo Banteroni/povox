@@ -1,10 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { BsPauseFill, BsPeopleFill, BsPlayFill, BsSkipEndFill, BsSkipStartFill, BsVolumeDownFill } from "react-icons/bs";
 import { FaGear, FaHouse, FaRecordVinyl } from "react-icons/fa6";
-import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
 import BackendManager from "./utils/BackendManager";
 import { useAppSelector } from "./global/hooks";
 import Fetcher from "./utils/Fetcher";
+import { removeQueueTracks, setMusicBarTrack } from "./global/features/musicBarSlice";
+import { useDispatch } from "react-redux";
+import { toMMSS } from "./utils/MiscUtils";
 
 const routes: AnchorProps[] = [
     {
@@ -38,7 +41,7 @@ type AnchorProps = {
 
 export default function Layout() {
     const navigate = useNavigate();
-    const location = useLocation()
+    const dispatch = useDispatch();
 
     // States
     const [isPlaying, setIsPlaying] = useState(false);
@@ -52,16 +55,7 @@ export default function Layout() {
     const musicBar = useRef<HTMLDivElement | null>(null);
     const contentContainer = useRef<HTMLDivElement | null>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
-
-    // Functions
-    const invertPlaying = () => {
-        setIsPlaying(!isPlaying);
-    }
-
-    const changeVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setVolume(parseInt(e.target.value));
-    }
-
+    const progessionBar = useRef<HTMLDivElement | null>(null);
 
     // Effects
     useEffect(() => {
@@ -97,31 +91,12 @@ export default function Layout() {
     }, [isPlaying])
 
     useEffect(() => {
-        if (fetcher) {
+        if (fetcher && musicBarState.trackId) {
             loadTrack(musicBarState.trackId as string);
         }
     }, [musicBarState.trackId, fetcher])
 
-    useEffect(() => {
-        if (audioRef.current) {
-            audioRef.current.addEventListener("timeupdate", () => {
-                if (audioRef.current) {
-                    const duration = audioRef.current.duration;
-                    const currentTime = audioRef.current.currentTime;
-                    const progression = (currentTime / duration) * 100;
-                    setCurrentTime(currentTime);
-                    setProgression(progression);
-                }
-            });
-            audioRef.current.addEventListener("play", () => {
-                setIsPlaying(true);
-            })
-            audioRef.current.addEventListener("pause", () => {
-                setIsPlaying(false);
-            })
-        }
-    }, [audioRef])
-
+    // Functions
     const loadTrack = async (trackId: string) => {
         if (!fetcher) {
             return;
@@ -133,54 +108,55 @@ export default function Layout() {
         audioElement.pause(); // Stop the audio
         audioElement.src = ""; // Clear the source
 
-        const reader = await fetcher.GetStream(trackId);
-        const mediaSource = new MediaSource();
+        // Get media source and clean up when done
+        const reader = fetcher.GetStreamUrl(trackId);
+        audioElement.src = reader
 
-        audioElement.src = URL.createObjectURL(mediaSource);
-        audioElement.controls = true;
         audioElement.play();
-
-
-        mediaSource.addEventListener('sourceopen', async () => {
-            const sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
-
-            const readNextChunk = async () => {
-                const { done, value } = await reader.read();
-                if (done) {
-                    // Signal that we're done appending
-                    mediaSource.endOfStream();
-                    return;
-                }
-
-                // Wait until the buffer is ready to accept more data
-                sourceBuffer.addEventListener('updateend', () => {
-                    readNextChunk(); // Read the next chunk
-                }, { once: true });
-
-                // Append the chunk to the source buffer
-                sourceBuffer.appendBuffer(value);
-            };
-
-            readNextChunk(); // Start reading the first chunk
-        });
     };
 
+    const onTimeUpdate = (e: React.SyntheticEvent<HTMLAudioElement>) => {
+
+        const duration = musicBarState.duration;
+        const currentTime = e.currentTarget.currentTime;
+        const percentageProgress = (currentTime / duration) * 100;
+
+        // Get width of progressionBar
+        if (progessionBar.current) {
+            const width = progessionBar.current.offsetWidth;
+            const finalWidth = Math.round((width / 100) * percentageProgress);
+            setProgression(finalWidth);
+        }
+        setCurrentTime(currentTime);
+    }
+
+    const handleNextInQueue = async () => {
+        if (!fetcher) {
+            return;
+        }
+        const trackId = musicBarState.queue[0];
+        if (trackId) {
+
+            var track = await fetcher.GetTrack(trackId);
+            if (track.albumId == musicBarState.albumId && musicBarState.coverArt !== null) {
+                track.coverArt = musicBarState.coverArt;
+            }
+            dispatch(setMusicBarTrack(track));
+            dispatch(removeQueueTracks([trackId]));
+        }
+    }
+    
+    const invertPlaying = () => {
+        setIsPlaying(!isPlaying);
+    }
+
+    const changeVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setVolume(parseInt(e.target.value));
+    }
 
     // Get MM:SS from current time seconds and duration
-    var currentTimeStringSeconds = Math.floor(currentTime % 60).toString();
-    if (currentTimeStringSeconds.length === 1) {
-        currentTimeStringSeconds = `0${currentTimeStringSeconds}`;
-    }
-    const currentTimeStringMinutes = Math.floor(currentTime / 60);
-    const currentDurationString = `${currentTimeStringMinutes}:${currentTimeStringSeconds}`;
-
-    const duration = musicBarState.duration;
-    var durationStringSeconds = Math.floor(duration % 60).toString();
-    if (durationStringSeconds.length === 1) {
-        durationStringSeconds = `0${durationStringSeconds}`;
-    }
-    const durationStringMinutes = Math.floor(duration / 60);
-    const durationString = `${durationStringMinutes}:${durationStringSeconds}`;
+    const currentDurationString = toMMSS(currentTime);
+    const durationString = toMMSS(musicBarState.duration);
 
     return (
         <main className="h-screen min-w-full prose flex flex-col overflow-hidden justify-between">
@@ -202,7 +178,7 @@ export default function Layout() {
                 </div>
             </div>
             <div className="w-full bottom-0 bg-base-300 grid grid-cols-3 p-3 border-t border-solid border-secondary" ref={musicBar}>
-                <audio ref={audioRef} controls className="hidden" />
+                <audio ref={audioRef} controls className="hidden" onTimeUpdate={onTimeUpdate} onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} onEnded={handleNextInQueue} />
 
                 <div className="flex">
                     {
@@ -219,12 +195,12 @@ export default function Layout() {
                         <button><BsSkipStartFill /></button>
                         {isPlaying ? <button className="text-white" onClick={invertPlaying}><BsPauseFill /></button> : <button onClick={invertPlaying} className="text-primary"><BsPlayFill /></button>}
 
-                        <button><BsSkipEndFill /></button>
+                        <button onClick={handleNextInQueue}><BsSkipEndFill /></button>
                     </div>
                     <div className="flex w-full items-center gap-x-3 text-sm">
                         {currentDurationString}
-                        <div className="bg-neutral h-1 w-full rounded-full" >
-                            <div className="bg-white h-1 rounded-full" style={{ width: progression + "%" }} />
+                        <div className="bg-neutral h-1 w-full rounded-full" ref={progessionBar}>
+                            <div className="bg-white h-1 rounded-full" style={{ width: `${progression}px` }} />
                         </div>
                         {durationString}
                     </div>
@@ -240,5 +216,5 @@ export default function Layout() {
 
 function Anchor(props: AnchorProps) {
     return (
-        <Link className="no-underline font-normal flex justify-start items-center gap-x-3 text-neutral-content hover:bg-white/10 p-3 rounded-xl duration-75" to={props.href}><span className="text-primary text-2xl lg:text-base">{props.icon && props.icon}</span> <span className="hidden md:block duration-300">{props.text}</span></Link>)
+        <Link className="no-underline font-normal flex justify-start items-center gap-x-3 text-neutral-content hover:bg-white/10 p-3 rounded-xl duration-75" to={props.href}><span className="text-primary">{props.icon && props.icon}</span> <span className="hidden md:block duration-300">{props.text}</span></Link>)
 }

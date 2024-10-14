@@ -1,3 +1,5 @@
+import Fetcher from "../utils/Fetcher";
+
 export default class Track {
     album: string;
     albumId: string;
@@ -46,6 +48,22 @@ export default class Track {
         this.transcodedSuffix = transcodedSuffix;
         this.type = type;
         this.year = year;
+    }
+
+    public async GetCoverArt(fetcher: Fetcher): Promise<BinaryData> {
+        if (fetcher.isReady) {
+            return await fetcher.GetCoverArt(this.id);
+        }
+        throw new Error('Fetcher not ready');
+    }
+
+    public async GetCoverArtUrl(fetcher: Fetcher): Promise<string> {
+        if (fetcher.isReady) {
+            var binary = await fetcher.GetCoverArt(this.id);
+            var url = URL.createObjectURL(new Blob([binary]))
+            return url;
+        }
+        throw new Error('Fetcher not ready');
     }
 
 
