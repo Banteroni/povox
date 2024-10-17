@@ -15,6 +15,7 @@ export interface musicBarState {
     artistId: string | null;
     duration: number;
     queue: string[];
+    past: string[];
 
 
 }
@@ -31,7 +32,8 @@ const initialState: musicBarState = {
     artist: null,
     artistId: null,
     duration: 0,
-    queue: []
+    queue: [],
+    past: [],
 }
 
 export const musicBarSlice = createSlice({
@@ -65,12 +67,21 @@ export const musicBarSlice = createSlice({
         },
         setQueueTracks(state, action: PayloadAction<string[]>) {
             state.queue = action.payload
+        },
+        removePastTracks(state, action: PayloadAction<string[]>) {
+            state.past = state.past.filter(x => !action.payload.includes(x))
+        },
+        addPastTracks(state, action: PayloadAction<string[]>) {
+            state.past = state.past = [...state.past, ...action.payload]
+        },
+        setPastTracks(state, action: PayloadAction<string[]>) {
+            state.past = action.payload
         }
 
     }
 })
 
-export const { setPlaying, setMusicBarTrack, resetQueue, removeQueueTracks, addQueueTracks, setQueueTracks } = musicBarSlice.actions
+export const { setPlaying, setMusicBarTrack, resetQueue, removeQueueTracks, addQueueTracks, setQueueTracks, removePastTracks, addPastTracks, setPastTracks } = musicBarSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectAlbum = (state: RootState) => state.musicBar

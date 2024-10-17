@@ -27,21 +27,22 @@ export default function Albums() {
             const backendManager = new BackendManager();
             await backendManager.Initialize();
             const fetcher = await backendManager.CreateFetcher();
+            fetcher.isReady = true;
             setFetcher(fetcher);
         })()
     }, [])
 
     useEffect(() => {
-        if (fetcher) {
+        if (fetcher && fetcher.isReady) {
             queryAlbums();
         }
     }, [fetcher])
 
     useEffect(() => {
-        if (search.isSearching) {
+        if (search.isSearching && fetcher?.isReady) {
             queryAlbums();
         }
-    }, [search.isSearching])
+    }, [search.isSearching, fetcher])
 
     // functions
     const searchKeyUpevent = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -77,7 +78,8 @@ export default function Albums() {
             }
 
             for (let i = 0; i < fetchedAlbums.length; i++) {
-                const coverArt = await fetchedAlbums[i].GetCoverArt(fetcher);
+                const coverArt = await fetchedAlbums[i].GetCovertArtUrl(fetcher);
+                fetchedAlbums[i].coverArt = coverArt;
             }
             setAlbums([...currentAlbums, ...fetchedAlbums])
             setSearch(x => ({ ...x, isSearching: false }))

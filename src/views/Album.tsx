@@ -5,10 +5,11 @@ import BackendManager from "../utils/BackendManager";
 import Track from "../models/Track";
 import { useAppDispatch, useAppSelector } from "../global/hooks";
 import TrackComponent from "../components/TrackComponent";
-import { setMusicBarTrack, setQueueTracks } from "../global/features/musicBarSlice";
+import { addPastTracks, setMusicBarTrack, setQueueTracks } from "../global/features/musicBarSlice";
 
 export default function Album() {
     let params = useParams();
+    const musicBarSlice = useAppSelector(x => x.musicBar);
 
     // State
     const [fetcher, setFetcher] = useState<Fetcher | null>(null);
@@ -29,6 +30,12 @@ export default function Album() {
         const index = trackIds.indexOf(track.id);
         const tracksToQueue = tracks.slice(index + 1).map(x => x.id);
         dispatch(setQueueTracks(tracksToQueue));
+        console.log(musicBarSlice)
+        if (musicBarSlice.isPlaying) {
+            console.log(musicBarSlice)
+            // add to past tracks
+            dispatch(addPastTracks([track.id]));
+        }
     }
 
     // UseEffects
