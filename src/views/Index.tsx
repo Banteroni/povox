@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import Fetcher from "../utils/Fetcher";
-import BackendManager from "../utils/BackendManager";
+import Fetcher from "../services/Fetcher.ts";
+import BackendService from "../services/BackendService.ts";
 import Album from "../models/Album";
 import { GetEntityType } from "../types/enums.ts";
 import AlbumComponent from "../components/AlbumComponent.tsx";
 import { AlbumInfo } from "../types/Fetcher";
-import { RouteToAlbum } from "../utils/RoutingUtils.ts";
+import { RouteToAlbum } from "../services/RoutingUtils.ts";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
@@ -62,9 +62,9 @@ export default function Index() {
 
     useEffect(() => {
         async function init() {
-            const backendManager = new BackendManager();
-            await backendManager.Initialize();
-            const fetcher = await backendManager.CreateFetcher();
+            const backendService = new BackendService();
+            await backendService.Initialize();
+            const fetcher = await backendService.CreateFetcher();
             setFetcher(fetcher);
         }
         init();

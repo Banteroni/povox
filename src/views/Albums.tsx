@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { BsSearch } from "react-icons/bs";
 import Album from "../models/Album";
-import Fetcher from "../utils/Fetcher";
-import BackendManager from "../utils/BackendManager";
+import Fetcher from "../services/Fetcher";
+import BackendService from "../services/BackendService";
 import { GetEntityType } from "../types/enums";
 import AlbumComponent from "../components/AlbumComponent";
 
@@ -24,9 +24,9 @@ export default function Albums() {
     // use effects
     useEffect(() => {
         (async () => {
-            const backendManager = new BackendManager();
-            await backendManager.Initialize();
-            const fetcher = await backendManager.CreateFetcher();
+            const backendService = new BackendService();
+            await backendService.Initialize();
+            const fetcher = await backendService.CreateFetcher();
             fetcher.isReady = true;
             setFetcher(fetcher);
         })()

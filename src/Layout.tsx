@@ -2,12 +2,14 @@ import React, { useEffect, useRef, useState } from "react";
 import { BsPauseFill, BsPeopleFill, BsPlayFill, BsSkipEndFill, BsSkipStartFill, BsVolumeDownFill } from "react-icons/bs";
 import { FaGear, FaHouse, FaRecordVinyl } from "react-icons/fa6";
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import BackendManager from "./utils/BackendManager";
 import { useAppSelector } from "./global/hooks";
-import Fetcher from "./utils/Fetcher";
+import Fetcher from "./services/Fetcher";
 import { addPastTracks, removePastTracks, removeQueueTracks, setMusicBarTrack, setPlaying, setQueueTracks } from "./global/features/musicBarSlice";
 import { useDispatch } from "react-redux";
-import { toMMSS } from "./utils/MiscUtils";
+import { toMMSS } from "./services/MiscUtils";
+import BackendService from "./services/BackendService";
+import Artist from "./models/Artist";
+import { RouteToArtist } from "./services/RoutingUtils";
 
 const routes: AnchorProps[] = [
     {
@@ -63,7 +65,7 @@ export default function Layout() {
     // Effects
     useEffect(() => {
         async function initialize() {
-            const bem = new BackendManager();
+            const bem = new BackendService();
             await bem.Initialize();
             const userData = await bem.GetUserData();
             if (!userData) {
@@ -98,10 +100,6 @@ export default function Layout() {
             loadTrack(musicBarState.trackId as string);
         }
     }, [musicBarState.trackId, fetcher])
-
-    useEffect(() => {
-        console.log(musicBarState.past, musicBarState.queue)
-    }, [musicBarState.past, musicBarState.queue])
 
     // Functions
     const loadTrack = async (trackId: string) => {
@@ -205,6 +203,8 @@ export default function Layout() {
     const currentDurationString = toMMSS(currentTime);
     const durationString = toMMSS(musicBarState.duration);
 
+    const artist = new Artist(musicBarState.artistId as string, musicBarState.artist as string, musicBarState.coverArt as string, musicBarState.coverArt as string, 0, [])
+
     return (
         <main className="h-screen min-w-full prose flex flex-col overflow-hidden justify-between" onMouseUp={() => setProgressBarState(() => ({ canChange: false, isChanging: false }))} onClick={handleProgressBarMovement} onMouseMove={handleProgressBarMovement}>
             <div className="flex overflow-hidden flex-1">
@@ -233,7 +233,8 @@ export default function Layout() {
                             {musicBarState.coverArt && <img className="h-14 w-14 rounded m-0" src={musicBarState.coverArt} />}
                             <div className="flex flex-col justify-center pl-3">
                                 <Link to={`albums/${musicBarState.albumId}`} className="text-white no-underline font-normal hover:underline">{musicBarState.trackName}</Link>
-                                <Link className="text-sm font-normal no-underline hover:underline" to={`artists/${musicBarState.artistId}`}>{musicBarState.artist}</Link>
+                                {/* <Link className="text-sm font-normal no-underline hover:underline" to={`artists/${musicBarState.artistId}`}>{musicBarState.artist}</Link> */}
+                                <span className="text-sm font-normal no-underline hover:underline" onClick={() => RouteToArtist(artist, navigate, dispatch)}>{musicBarState.artist}</span>
                             </div></>)
                     }
                 </div>

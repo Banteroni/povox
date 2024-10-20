@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import Fetcher from "../utils/Fetcher";
-import BackendManager from "../utils/BackendManager";
+import Fetcher from "../services/Fetcher";
+import BackendService from "../services/BackendService";
 import Track from "../models/Track";
 import { useAppDispatch, useAppSelector } from "../global/hooks";
 import TrackComponent from "../components/TrackComponent";
@@ -30,10 +30,7 @@ export default function Album() {
         const index = trackIds.indexOf(track.id);
         const tracksToQueue = tracks.slice(index + 1).map(x => x.id);
         dispatch(setQueueTracks(tracksToQueue));
-        console.log(musicBarSlice)
         if (musicBarSlice.isPlaying) {
-            console.log(musicBarSlice)
-            // add to past tracks
             dispatch(addPastTracks([track.id]));
         }
     }
@@ -41,9 +38,9 @@ export default function Album() {
     // UseEffects
     useEffect(() => {
         async function init() {
-            const backendManager = new BackendManager();
-            await backendManager.Initialize();
-            const fetcher = await backendManager.CreateFetcher();
+            const backendService = new BackendService();
+            await backendService.Initialize();
+            const fetcher = await backendService.CreateFetcher();
             setFetcher(fetcher);
         }
         init();

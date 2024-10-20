@@ -1,6 +1,6 @@
 import { Field, Form, Formik } from "formik";
-import BackendManager from "../utils/BackendManager";
-import Fetcher from "../utils/Fetcher";
+import BackendService from "../services/BackendService";
+import Fetcher from "../services/Fetcher";
 import { useNavigate } from "react-router-dom";
 
 export default function Landing() {
@@ -30,16 +30,16 @@ export default function Landing() {
                     onSubmit={async (values, { setSubmitting }) => {
                         setSubmitting(true);
                         const urlFormatted = `http://${values.url}`;
-                        var backendManager = new BackendManager();
-                        await backendManager.Initialize();
+                        var backendService = new BackendService();
+                        await backendService.Initialize();
                         var salt = Fetcher.generateSalt();
                         var token = await Fetcher.generateToken(values.password, salt);
 
-                        // await backendManager.SetUserData({ username: values.username, token: token, url: values.url, salt: salt});
+                        // await BackendService.SetUserData({ username: values.username, token: token, url: values.url, salt: salt});
                         var fetcher = new Fetcher(urlFormatted, values.username, token, salt);
                         try {
                             await fetcher.Ping();
-                            backendManager.SetUserData({ username: values.username, token: token, url: urlFormatted, salt: salt });
+                            backendService.SetUserData({ username: values.username, token: token, url: urlFormatted, salt: salt });
                             navigate("/");
 
                         }

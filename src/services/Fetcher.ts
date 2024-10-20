@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import Album from '../models/Album';
 import { invoke } from '@tauri-apps/api/core';
-import type { AlbumInfo, GetAlbumInfoResponse, GetAlbumsPayload, GetArtistsPayload, GetArtistsResponse, QueryResponse, SubsonicResponse } from '../types/Fetcher';
+import type { AlbumInfo, ArtistInfo, GetAlbumInfoResponse, GetAlbumsPayload, GetArtistInfoResponse, GetArtistsPayload, GetArtistsResponse, GetMusicDirectoryResponse, QueryResponse, SubsonicResponse } from '../types/Fetcher';
 import Track from '../models/Track';
 import { ReadableStreamDefaultReader } from 'stream/web';
 import Artist from '../models/Artist';
@@ -90,6 +90,29 @@ export default class Fetcher {
             throw new Error('Song not found');
         }
         return song;
+    }
+
+    public async GetArtistInfo(id: string): Promise<ArtistInfo> {
+        const response = await this.GenericRequest("/getArtistInfo", {
+            id: id
+        });
+        const artist = response.data["subsonic-response"] as unknown as GetArtistInfoResponse;
+        return {
+            biography: artist.artistInfo.biography,
+            musicBrainzId: artist.artistInfo.musicBrainzId,
+            lastFmUrl: artist.artistInfo.lastFmUrl,
+            smallImageUrl: artist.artistInfo.smallImageUrl,
+            mediumImageUrl: artist.artistInfo.mediumImageUrl,
+            largeImageUrl: artist.artistInfo.largeImageUrl
+        }
+    }
+
+    public async GetArtist(id: string): Promise<Artist> {
+        const response = await this.GenericRequest("/getArtist", {
+            id: id
+        });
+        const artist = response.data["subsonic-response"].artist as Artist;
+        return new Artist(artist.id, artist.name, artist.coverArt, artist.artistImageUrl, artist.albumCount, artist.album);
     }
 
     public async GetCoverArt(id: string): Promise<BinaryData> {

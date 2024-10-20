@@ -1,9 +1,9 @@
 import { createStore, Store } from "@tauri-apps/plugin-store";
-import type { UserData } from "../types/BackendManager";
+import type { UserData } from "../types/BackendService";
 import Fetcher from "./Fetcher";
 
 
-export default class BackendManager {
+export default class BackendService {
     private store: Store | null = null;
     public isReady = false;
 

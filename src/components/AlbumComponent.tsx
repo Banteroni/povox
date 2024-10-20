@@ -2,7 +2,7 @@
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Album from "../models/Album";
-import { RouteToAlbum } from "../utils/RoutingUtils";
+import { RouteToAlbum } from "../services/RoutingUtils";
 
 
 export default function AlbumComponent(props: {

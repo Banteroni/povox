@@ -2,10 +2,12 @@ import { configureStore } from '@reduxjs/toolkit'
 import { albumSlice } from './features/albumSlice'
 import { styleSlice } from './features/styleSlice'
 import { musicBarSlice } from './features/musicBarSlice'
+import { artistSlice } from './features/artistSlice'
 
 export const store = configureStore({
     reducer: {
         album: albumSlice.reducer,
+        artist: artistSlice.reducer,
         style: styleSlice.reducer,
         musicBar: musicBarSlice.reducer
     },
